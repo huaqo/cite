@@ -1,0 +1,10 @@
+{
+	"id": "cite",
+	"name": "cite",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Zotero local API integration by huaqo",
+	"author": "Obsidian",
+	"authorUrl": "https://huaqo.github.io/",
+	"isDesktopOnly": false
+}

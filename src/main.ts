@@ -1,0 +1,56 @@
+import { App, Editor, MarkdownView, Modal, Plugin, Notice } from 'obsidian';
+import { DEFAULT_SETTINGS, CiteSettings, CiteSettingTab } from "./settings";
+import { CiteReferenceModal } from "./modals"
+
+export default class Cite extends Plugin {
+	settings: CiteSettings;
+
+	async onload() {
+
+		await this.loadSettings();
+
+		this.addRibbonIcon('scroll-text', 'cite', (evt: MouseEvent) => {
+			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+			if (!view) {
+				new Notice("No active Markdown view");
+				console.log("No active Markdown view");
+				return;
+			}
+
+			const editor = view.editor;
+
+			new CiteReferenceModal(this.app, this.settings.portSetting, this.settings.linkSetting, (citation: string) => {
+				editor.replaceSelection(citation);
+			}).open();
+		});
+
+		this.addCommand({
+			id: 'citation-modal',
+			name: 'reference',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const selection = editor.getSelection();
+				new CiteReferenceModal(this.app, this.settings.portSetting, this.settings.linkSetting, (citation: string) => {
+					editor.replaceSelection(citation);
+				}).open();
+			}
+		});
+
+		this.addSettingTab(new CiteSettingTab(this.app, this));
+
+		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+
+	}
+
+	onunload() {
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<CiteSettings>);
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
+}
+
