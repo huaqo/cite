@@ -19,14 +19,16 @@ type ZoteroItemResponse = {
 	};
 };
 
-export class CiteReferenceClient {
+export class CiteClient {
 
 	private baseURL: string;
 	private userID: number;
+	private style: string;
 
-	constructor(port: string){
+	constructor(port: string, style: string){
 		this.baseURL = `http://127.0.0.1:${port}/api`;
 		this.userID = 0;
+		this.style = style;
 	}
 
 	private async request<T>(url: string): Promise<T> {
@@ -56,21 +58,15 @@ export class CiteReferenceClient {
 
 	}
 
-	async getItemReference(itemKey: string): Promise<string> {
-
-		const url = `${this.baseURL}/users/${this.userID}/items/${itemKey}?format=json&include=citation`
-
-		const item = await this.request<ZoteroItemResponse>(url);
-
-		if (!item.citation) {
-			throw new Error(`No citation returned for item ${itemKey}`);
-		}
-
-		return item.citation;
+	async getAllCitations(): Promise<ZoteroItemResponse[]> {
+		const url = `${this.baseURL}/users/${this.userID}/items?format=json&include=citation,data&style=${this.style}`
+		console.log(url)
+		return this.request<ZoteroItemResponse[]>(url);
 	}
 
-	async getAllItems(): Promise<ZoteroItemResponse[]> {
-		const url = `${this.baseURL}/users/${this.userID}/items?format=json&include=citation,data&style=apa`
+	async getAllBibliographies(): Promise<ZoteroItemResponse[]> {
+		const url = `${this.baseURL}/users/${this.userID}/items?format=json&include=bib,data&style=${this.style}`
+		console.log(url)
 		return this.request<ZoteroItemResponse[]>(url);
 	}
 

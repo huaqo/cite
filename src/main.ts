@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Plugin, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, CiteSettings, CiteSettingTab } from "./settings";
-import { CiteReferenceModal } from "./modals"
+import { CiteModal } from "./modals"
 
 export default class Cite extends Plugin {
 	settings: CiteSettings;
@@ -9,7 +9,7 @@ export default class Cite extends Plugin {
 
 		await this.loadSettings();
 
-		this.addRibbonIcon('scroll-text', 'cite', (evt: MouseEvent) => {
+		this.addRibbonIcon('scroll-text', 'insert citation', (evt: MouseEvent) => {
 			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 
 			if (!view) {
@@ -20,18 +20,29 @@ export default class Cite extends Plugin {
 
 			const editor = view.editor;
 
-			new CiteReferenceModal(this.app, this.settings.portSetting, this.settings.linkSetting, (citation: string) => {
+			new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "citation", (citation: string) => {
 				editor.replaceSelection(citation);
 			}).open();
 		});
 
 		this.addCommand({
-			id: 'citation-modal',
-			name: 'reference',
+			id: 'citation-command',
+			name: 'insert citation',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const selection = editor.getSelection();
-				new CiteReferenceModal(this.app, this.settings.portSetting, this.settings.linkSetting, (citation: string) => {
+				new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "citation",(citation: string) => {
 					editor.replaceSelection(citation);
+				}).open();
+			}
+		});
+
+		this.addCommand({
+			id: 'bibliograpy-command',
+			name: 'insert bibliography',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const selection = editor.getSelection();
+				new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "bibliography",(bibliography: string) => {
+					editor.replaceSelection(bibliography);
 				}).open();
 			}
 		});
