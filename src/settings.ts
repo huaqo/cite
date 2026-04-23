@@ -1,5 +1,4 @@
 import {App, PluginSettingTab, Setting } from "obsidian";
-import Cite from "./main";
 
 export interface CiteSettings {
 	portSetting: string;
@@ -49,7 +48,7 @@ export class CiteSettingTab extends PluginSettingTab {
 			}));
 
 		new Setting(containerEl)
-			.setName('Add link to library')
+			.setName('URI')
 			.setDesc('zotero://select/library/items/...')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.linkSetting)

@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Plugin, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, CiteSettings, CiteSettingTab } from "./settings";
-import { CiteModal } from "./modals"
+import { CiteModal, OpenModal } from "./modals"
 
 export default class Cite extends Plugin {
 	settings: CiteSettings;
@@ -25,6 +25,22 @@ export default class Cite extends Plugin {
 			}).open();
 		});
 
+		this.addRibbonIcon('scroll-text', 'insert bibliography', (evt: MouseEvent) => {
+			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+			if (!view) {
+				new Notice("No active Markdown view");
+				console.log("No active Markdown view");
+				return;
+			}
+
+			const editor = view.editor;
+
+			new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "bibliography", (citation: string) => {
+				editor.replaceSelection(citation);
+			}).open();
+		});
+
 		this.addCommand({
 			id: 'citation-command',
 			name: 'insert citation',
@@ -41,10 +57,18 @@ export default class Cite extends Plugin {
 			name: 'insert bibliography',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const selection = editor.getSelection();
-				new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "bibliography",(bibliography: string) => {
+				new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "bibliography", (bibliography: string) => {
 					editor.replaceSelection(bibliography);
 				}).open();
 			}
+		});
+
+		this.addCommand({
+			id: 'open-command',
+			name: 'open',
+			callback: () => {
+				new OpenModal(this.app, this.settings.portSetting).open();
+			},
 		});
 
 		this.addSettingTab(new CiteSettingTab(this.app, this));

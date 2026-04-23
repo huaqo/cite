@@ -1,10 +1,104 @@
+import { shell } from "electron";
 import { App, FuzzyMatch, FuzzySuggestModal, renderResults, Notice } from 'obsidian';
-import {CiteClient, ZoteroItemResponse} from "./clients"
+import { ZoteroClient } from "./clients";
+import type { ZoteroItemResponse } from "./clients";
+
+export class OpenModal extends FuzzySuggestModal<ZoteroItemResponse> {
+	private client: ZoteroClient;
+	private items: ZoteroItemResponse[] = [];
+	private zoteroBaseUrl;
+
+	constructor(
+		app: App,
+		port: string,
+	) {
+		super(app);
+		this.client = new ZoteroClient(port);
+		this.setPlaceholder("Loading references...");
+		this.zoteroBaseUrl = "zotero://select/library/items/";
+	}
+
+	async onOpen(){
+		super.onOpen();
+
+		try {
+			this.items = await this.client.getItemsTop();
+			this.setPlaceholder("Search Zotero...");
+			this.inputEl.disabled = false;
+			this.inputEl.focus();
+			this.updateSuggestions();
+		} catch (error) {
+			new Notice("Failed to load citations/bibliographies from Zotero. Maybe you forgot to turn on or configure Zotero.");
+			console.error(error);
+			this.close();
+		}
+	}
+
+
+	private getTitle(item: ZoteroItemResponse): string {
+		return item.data?.title ?? "Untitled";
+	}
+
+	private getYear(item: ZoteroItemResponse): string {
+		const date = item.data?.date;
+		if (!date) return "n.d.";
+
+		const match = date.match(/\b\d{4}\b/);
+		return match ? match[0] : "n.d.";
+	}
+
+	private getAuthor(item: ZoteroItemResponse): string {
+		const creators = item.data?.creators;
+		if (!creators || creators.length === 0) return "Unknown author";
+
+		const first = creators[0];
+
+		if (first.name) return first.name;
+		if (first.firstName && first.lastName) return `${first.firstName} ${first.lastName}`;
+		if (first.lastName) return first.lastName;
+
+		return "Unknown author";
+	}
+
+	private getKey(item: ZoteroItemResponse): string {
+		return item.key ?? "";
+	}
+
+	getItems(): ZoteroItemResponse[] {
+		return this.items;
+	}
+
+	getItemText(item: ZoteroItemResponse): string {
+		return `${this.getTitle(item)} ${this.getAuthor(item)} ${this.getYear(item)}`;
+	}
+
+	renderSuggestion(match: FuzzyMatch<ZoteroItemResponse>, el: HTMLElement) {
+		const { item } = match;
+
+		const title = this.getTitle(item);
+		const author = this.getAuthor(item);
+		const year = this.getYear(item);
+
+		const titleEl = el.createDiv();
+		renderResults(titleEl, title, match.match);
+
+		const subtitleEl = el.createEl("small");
+		const offset = -(title.length + 1);
+		renderResults(subtitleEl, `${author}, ${year}`, match.match, offset);
+	}
+
+	onChooseItem(item: ZoteroItemResponse) {
+		if (!this.getKey(item)) return;
+		const uri = `${this.zoteroBaseUrl}${this.getKey(item)}`;
+		shell.openExternal(uri);
+	}
+
+}
 
 export class CiteModal extends FuzzySuggestModal<ZoteroItemResponse> {
 
-	private onChoose: (citation: string) => void;
-	private client: CiteClient;
+	private onChoose: (reference: string) => void;
+	private client: ZoteroClient;
 	private items: ZoteroItemResponse[] = [];
 	private zoteroBaseUrl: string;
 	private createLink: boolean;
@@ -16,10 +110,10 @@ export class CiteModal extends FuzzySuggestModal<ZoteroItemResponse> {
 		createLink: boolean,
 		style: string,
 		mode: string,
-		onChoose: (citation: string) => void,
+		onChoose: (reference: string) => void,
 	) {
 		super(app);
-		this.client = new CiteClient(port, style);
+		this.client = new ZoteroClient(port, style);
 		this.onChoose = onChoose;
 		this.setPlaceholder("Loading citations...");
 		this.zoteroBaseUrl = "zotero://select/library/items/";
@@ -32,9 +126,9 @@ export class CiteModal extends FuzzySuggestModal<ZoteroItemResponse> {
 
 		try {
 			if (this.mode === "citation"){
-				this.items = await this.client.getAllCitations();
+				this.items = await this.client.getItemsTop();
 			} else if (this.mode === "bibliography"){
-				this.items = await this.client.getAllBibliographies();
+				this.items = await this.client.getItemsTop();
 			} else {
 				throw new Error(`Unknown mode: ${this.mode}`);
 			}
@@ -108,7 +202,6 @@ export class CiteModal extends FuzzySuggestModal<ZoteroItemResponse> {
 		const offset = -(title.length + 1);
 		renderResults(subtitleEl, `${author}, ${year}`, match.match, offset);
 	}
-
 
 	onChooseItem(item: ZoteroItemResponse) {
 	

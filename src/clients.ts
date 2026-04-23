@@ -1,5 +1,4 @@
 import { Notice, requestUrl } from 'obsidian';
-import Cite from "./main";
 
 type ZoteroItemResponse = {
 	key: string;
@@ -19,16 +18,25 @@ type ZoteroItemResponse = {
 	};
 };
 
-export class CiteClient {
+export class ZoteroClient {
 
-	private baseURL: string;
 	private userID: number;
-	private style: string;
+	private baseURL: string;
+	private style?: string;
+	private baseParams: URLSearchParams;
 
-	constructor(port: string, style: string){
-		this.baseURL = `http://127.0.0.1:${port}/api`;
+	constructor(port: string);
+	constructor(port: string, style: string);
+	constructor(port: string, style?: string) {
 		this.userID = 0;
+		this.baseURL = `http://127.0.0.1:${port}/api/users/${this.userID}`;
 		this.style = style;
+		this.baseParams = new URLSearchParams();
+		if (this.style) {
+			this.baseParams.set("style", this.style);
+		}
+		this.baseParams.set("format", "json");
+		this.baseParams.set("include", "citation,bib,data");
 	}
 
 	private async request<T>(url: string): Promise<T> {
@@ -58,15 +66,13 @@ export class CiteClient {
 
 	}
 
-	async getAllCitations(): Promise<ZoteroItemResponse[]> {
-		const url = `${this.baseURL}/users/${this.userID}/items?format=json&include=citation,data&style=${this.style}`
-		console.log(url)
+	async getItems(): Promise<ZoteroItemResponse[]> {
+		const url = `${this.baseURL}/items?${this.baseParams.toString()}`;
 		return this.request<ZoteroItemResponse[]>(url);
 	}
 
-	async getAllBibliographies(): Promise<ZoteroItemResponse[]> {
-		const url = `${this.baseURL}/users/${this.userID}/items?format=json&include=bib,data&style=${this.style}`
-		console.log(url)
+	async getItemsTop(): Promise<ZoteroItemResponse[]> {
+		const url = `${this.baseURL}/items/top?${this.baseParams.toString()}`;
 		return this.request<ZoteroItemResponse[]>(url);
 	}
 
