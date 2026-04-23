@@ -1,18 +1,18 @@
 import {App, PluginSettingTab, Setting } from "obsidian";
 
-export interface CiteSettings {
+export interface Settings {
 	portSetting: string;
 	styleSetting: string;
 	linkSetting: boolean;
 }
 
-export const DEFAULT_SETTINGS: CiteSettings = {
+export const DEFAULT_SETTINGS: Settings = {
 	portSetting: '23119',
 	styleSetting: 'apa',
 	linkSetting: true
 }
 
-export class CiteSettingTab extends PluginSettingTab {
+export class SettingTab extends PluginSettingTab {
 	plugin: Cite;
 
 	constructor(app: App, plugin: Cite) {

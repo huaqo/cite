@@ -1,9 +1,9 @@
 import { App, Editor, MarkdownView, Modal, Plugin, Notice } from 'obsidian';
-import { DEFAULT_SETTINGS, CiteSettings, CiteSettingTab } from "./settings";
-import { CiteModal, OpenModal } from "./modals"
+import { DEFAULT_SETTINGS, Settings, SettingTab } from "./settings";
+import { CiteModal, OpenModal, AnnotationModal } from "./modals"
 
 export default class Cite extends Plugin {
-	settings: CiteSettings;
+	settings: Settings;
 
 	async onload() {
 
@@ -71,7 +71,18 @@ export default class Cite extends Plugin {
 			},
 		});
 
-		this.addSettingTab(new CiteSettingTab(this.app, this));
+		this.addCommand({
+			id: 'annotation-command',
+			name: 'insert annotations',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				const selection = editor.getSelection();
+				new AnnotationModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, (annotations: string) => {
+					editor.replaceSelection(annotations);
+				}).open();
+			}
+		});
+
+		this.addSettingTab(new SettingTab(this.app, this));
 
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
@@ -81,7 +92,7 @@ export default class Cite extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<CiteSettings>);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<Settings>);
 	}
 
 	async saveSettings() {
