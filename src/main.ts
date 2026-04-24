@@ -1,6 +1,8 @@
 import { App, Editor, MarkdownView, Modal, Plugin, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, Settings, SettingTab } from "./settings";
-import { CiteModal, OpenModal, AnnotationModal } from "./modals"
+import { CiteModal } from "./CiteModal";
+import { OpenModal } from "./OpenModal";
+import { AnnotationModal } from "./AnnotationModal";
 
 export default class Cite extends Plugin {
 	settings: Settings;
