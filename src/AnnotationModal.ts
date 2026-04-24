@@ -1,27 +1,25 @@
 import { App, FuzzyMatch, FuzzySuggestModal } from 'obsidian';
 import { ZoteroClient } from "./ZoteroClient";
-import { ZoteroAnnotation } from "./ZoteroAnnotation";
 import { loadAnnotations, renderZoteroAnnotation } from "./Utils"
+import { Settings } from "./Settings";
 
 const ZOTERO_BASE_URL = "zotero://select/library/items/";
 
-export class AnnotationModal extends FuzzySuggestModal<ZoteroAnnotation> {
+export class AnnotationModal extends FuzzySuggestModal<ZoteroItem> {
 	private client: ZoteroClient;
-	private annotations: ZoteroAnnotation[] = [];
-	private createLink: boolean;
-	private onChoose: (annotations: string) => void;
+	private annotations: ZoteroItem[] = [];
+	private onChoose: (item: string) => void;
+	private settings: Settings;
 
 	constructor(
 		app: App,
-		port: string,
-		createLink: boolean,
-		style: string,
-		onChoose: (annotations: string) => void,
+		settings: Settings,
+		onChoose: (item: string) => void,
 	) {
 		super(app);
-		this.client = new ZoteroClient(port, style);
+		this.settings = settings;
+		this.client = new ZoteroClient(this.settings.port, this.settings.style);
 		this.setPlaceholder("Loading...");
-		this.createLink = createLink
 		this.onChoose = onChoose;
 	}
 
@@ -30,28 +28,27 @@ export class AnnotationModal extends FuzzySuggestModal<ZoteroAnnotation> {
 		super.onOpen();
 	}
 
-	getItems(): ZoteroAnnotation[] {
+	getItems(): ZoteroItem[] {
 		return this.annotations;
 	}
 
-
-	getItemText(annotation: ZoteroAnnotation): string {
-		return annotation.toString();
+	getItemText(item: ZoteroItem): string {
+		return `${item.annotationText} ${item.parentItem[this.settings.search]}`;
 	}
 
-	renderSuggestion(match: FuzzyMatch<ZoteroAnnotation>, el: HTMLElement) {
-		renderZoteroAnnotation(match, el);
+	renderSuggestion(match: FuzzyMatch<ZoteroItem>, el: HTMLElement) {
+		renderZoteroAnnotation(match, el, this.settings.search);
 	}
 
-	async onChooseItem(annotation: ZoteroAnnotation) {
+	async onChooseItem(item: ZoteroItem) {
 
-		let citation = annotation.parentItem.citation;
+		let citation = item.parentItem.citation ?? "";
 
-		if (this.createLink) {
-			citation = `[${citation}](${ZOTERO_BASE_URL}${annotation.parentItemKey})`;
+		if (this.settings.link) {
+			citation = `[${citation}](${ZOTERO_BASE_URL}${item.parentItemKey})`;
 		}
 
-		this.onChoose(`"${annotation.text}" ${citation}`);
+		this.onChoose(`"${item.annotationText}" ${citation}`);
 	}
 
 }

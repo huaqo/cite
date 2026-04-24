@@ -1,16 +1,5 @@
 import {App, PluginSettingTab, Setting } from "obsidian";
-
-export interface Settings {
-	portSetting: string;
-	styleSetting: string;
-	linkSetting: boolean;
-}
-
-export const DEFAULT_SETTINGS: Settings = {
-	portSetting: '23119',
-	styleSetting: 'apa',
-	linkSetting: true
-}
+import { ZoteroFields } from "./ZoteroFields";
 
 export class SettingTab extends PluginSettingTab {
 	plugin: Cite;
@@ -30,9 +19,9 @@ export class SettingTab extends PluginSettingTab {
 			.setDesc('http://localhost:<PORT>/api/')
 			.addText(text => text
 				.setPlaceholder('Enter a Port')
-				.setValue(this.plugin.settings.portSetting)
+				.setValue(this.plugin.settings.port)
 				.onChange(async (value) => {
-					this.plugin.settings.portSetting = value;
+					this.plugin.settings.port = value;
 					await this.plugin.saveSettings();
 			}));
 
@@ -41,9 +30,9 @@ export class SettingTab extends PluginSettingTab {
 			.setDesc('https://www.zotero.org/styles?q=<STYLE>')
 			.addText(text => text
 				.setPlaceholder('Enter a Style')
-				.setValue(this.plugin.settings.styleSetting)
+				.setValue(this.plugin.settings.style)
 				.onChange(async (value) => {
-					this.plugin.settings.styleSetting = value;
+					this.plugin.settings.style = value;
 					await this.plugin.saveSettings();
 			}));
 
@@ -51,14 +40,28 @@ export class SettingTab extends PluginSettingTab {
 			.setName('URI')
 			.setDesc('zotero://select/library/items/...')
 			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.linkSetting)
+				.setValue(this.plugin.settings.link)
 				.onChange(async (value) => {
-					this.plugin.settings.linkSetting = value;
+					this.plugin.settings.link = value;
 					await this.plugin.saveSettings();
 					this.display();
-				})
-			);
+			}));
 
+		new Setting(containerEl)
+			.setName('Search')
+			.setDesc('secondary search field')
+			.addDropdown(dropdown => {
+				ZoteroFields.forEach (opt => {
+					dropdown.addOption(opt, opt);
+				});
+
+				dropdown
+					.setValue(this.plugin.settings.search)
+					.onChange(async (value) => {
+						this.plugin.settings.search = value;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 
 }

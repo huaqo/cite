@@ -1,5 +1,6 @@
-import { App, Editor, MarkdownView, Modal, Plugin, Notice } from 'obsidian';
-import { DEFAULT_SETTINGS, Settings, SettingTab } from "./settings";
+import { App, Editor, MarkdownView, Modal, Plugin } from 'obsidian';
+import { DEFAULT_SETTINGS, Settings } from "./Settings";
+import { SettingTab } from "./SettingTab";
 import { CiteModal } from "./CiteModal";
 import { OpenModal } from "./OpenModal";
 import { AnnotationModal } from "./AnnotationModal";
@@ -17,7 +18,7 @@ export default class Cite extends Plugin {
 			id: 'open-command',
 			name: 'open',
 			callback: () => {
-				new OpenModal(this.app, this.settings.portSetting).open();
+				new OpenModal(this.app, this.settings).open();
 			},
 		});
 
@@ -26,7 +27,7 @@ export default class Cite extends Plugin {
 			name: 'insert citation',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const selection = editor.getSelection();
-				new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "citation",(citation: string) => {
+				new CiteModal(this.app, this.settings, "citation",(citation: string) => {
 					editor.replaceSelection(citation);
 				}).open();
 			}
@@ -37,7 +38,7 @@ export default class Cite extends Plugin {
 			name: 'insert bibliography',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const selection = editor.getSelection();
-				new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "bibliography", (bibliography: string) => {
+				new CiteModal(this.app, this.settings, "bibliography", (bibliography: string) => {
 					editor.replaceSelection(bibliography);
 				}).open();
 			}
@@ -48,7 +49,7 @@ export default class Cite extends Plugin {
 			name: 'insert annotations',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				const selection = editor.getSelection();
-				new AnnotationModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, (annotations: string) => {
+				new AnnotationModal(this.app, this.settings, (annotations: string) => {
 					editor.replaceSelection(annotations);
 				}).open();
 			}

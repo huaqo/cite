@@ -2,24 +2,83 @@ import type { ZoteroResponse } from "./ZoteroResponse";
 
 export class ZoteroItem {
 	constructor(
-		public title: string,
-		public year: string,
-		public creators: string,
 		public key: string,
 		public citation: string,
 		public bibliography: string,
+		public itemType: string,
+		public title: string,
+		public abstractNote: string,
+		public date: string,
+		public shortTitle: string,
+		public language: string,
+		public libraryCatalog: string,
+		public publisher: string,
+		public place: string,
+		public ISBN: string,
+		public numPages: string,
+		public creators: string,
+		public tags: string,
+		public collections: string,
+		public relations: string,
+		public dateAdded: string,
+		public dateModified: string,
+		public attachmentItemKey: string,
+		public parentItemKey: string,
+		public parentItem?: ZoteroItem,
+		public annotationText: string,
+		public annotationComment: string,
+		public annotationColor: string,
+		public pageLabel: string,
 	) {}
 
 	static fromResponse(item: ZoteroResponse): ZoteroItem {
-		const title = item.data?.title ?? "Untitled";
-		const date = item.data?.date;
-		const yearMatch = date?.match(/\b\d{4}\b/);
-		const year = yearMatch ? yearMatch[0] : "n.d.";
-		const creators = this.formatCreators(item.data?.creators);
-		const key = item.key ?? "No Key";
-		const citation = this.htmlToPlainText(item.citation ?? "");
-		const bibliography = this.htmlToPlainText(item.bib ?? "");
-		return new ZoteroItem(title, year, creators, key, citation, bibliography);
+		const data = item.data;
+
+		return new ZoteroItem(
+			item.key ?? "",
+			this.html2text(item.citation ?? ""),
+			this.html2text(item.bib ?? ""),
+			data?.itemType ?? "",
+			data?.title ?? "",
+			data?.abstractNote ?? "",
+			data?.date ?? "",
+			data?.shortTitle ?? "",
+			data?.language ?? "",
+			data?.libraryCatalog ?? "",
+			data?.publisher ?? "",
+			data?.place ?? "",
+			data?.ISBN ?? "",
+			data?.numPages ?? "",
+			this.formatCreators(data?.creators),
+			this.formatTags(data?.tags),
+			this.array2text(data?.collections),
+			this.object2text(data?.relations),
+			data?.dateAdded ?? "",
+			data?.dateModified ?? "",
+			data?.parentItem ?? "",
+			"",
+			undefined,
+			data?.annotationText ?? "",
+			data?.annotationComment ?? "",
+			this.hex2color(data?.annotationColor),
+			data?.pageLabel ?? "",
+		);
+	}
+
+	private static array2text(values?: unknown[]): string {
+		return values?.map(String).join(", ") ?? "";
+	}
+
+	private static object2text(value?: Record<string, unknown>): string {
+		if (!value) return "";
+		return Object.values(value).flat().map(String).join(", ");
+	}
+
+	private static formatTags(tags?: Array<{ tag?: string }>): string {
+		return tags
+			?.map(t => t.tag ?? "")
+			.filter(Boolean)
+			.join(", ") ?? "";
 	}
 
 	private static formatCreators(
@@ -29,35 +88,27 @@ export class ZoteroItem {
 			name?: string;
 		}>
 	): string {
-		if (!creators || creators.length === 0) return "Unknown author";
-
-		const names = creators.map(c => {
-			if (c.name) return c.name;
-			if (c.firstName && c.lastName) return `${c.firstName} ${c.lastName}`;
-			if (c.lastName) return c.lastName;
-			return "Unknown";
-		});
-
-		return names.join(" & ");
+		return creators
+			?.map(c => c.name ?? [c.firstName, c.lastName].filter(Boolean).join(" "))
+			.filter(Boolean)
+			.join(", ") ?? "";
 	}
 
-	private static htmlToPlainText(html: string): string {
+	private static html2text(html: string): string {
 		const div = document.createElement("div");
 		div.innerHTML = html;
 
 		return div.textContent?.trim() ?? "";
 	}
 
-	toString(): string {
-		return [this.title, this.year, this.creators, this.key, this.citation, this.bibliography]
-			.filter(Boolean)
-			.join(" ");
-	}
-
-	toStringShort(): string {
-		return [this.creators, this.year]
-			.filter(Boolean)
-			.join(", ");
+	private static hex2color(hex?: string): string {
+		switch (hex?.toLowerCase()) {
+			case "#a28ae5": return "Purple";
+			case "#ff6666": return "Red";
+			case "#009980": return "Teal";
+			case "#ffd400": return "Yellow";
+			default: return "";
+		}
 	}
 
 }

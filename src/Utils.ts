@@ -2,7 +2,8 @@ import { renderResults, Notice } from "obsidian";
 
 export function renderZoteroItem(
 	match: FuzzyMatch<ZoteroItem>,
-	el: HTMLElement
+	el: HTMLElement,
+	property: string
 ) {
 	const { item } = match;
 
@@ -13,24 +14,49 @@ export function renderZoteroItem(
 	const offset = -(item.title.length + 1);
 	renderResults(
 		subtitleEl,
-		`${item.creators}, ${item.year}`,
+		`${item[property]}`,
 		match.match,
 		offset
 	);
 }
 
 export function renderZoteroAnnotation(
-	match: FuzzyMatch<ZoteroAnnotation>,
-	el: HTMLElement
+	match: FuzzyMatch<ZoteroItem>,
+	el: HTMLElement,
+	property: string
 ) {
-	const { item: annotation } = match;
+	const { item } = match;
 
 	const titleEl = el.createDiv();
-	renderResults(titleEl, annotation.text, match.match);
+	renderResults(titleEl, item.annotationText, match.match);
 
 	const subtitleEl = el.createEl("small");
-	const offset = -(annotation.text.length + 1);
-	renderResults(subtitleEl, annotation.parentItem.toStringShort(), match.match, offset);
+	const offset = -(item.annotationText.length + 1);
+
+	const annotationProperties = [
+		"attachmentItemKey",
+		"parentItemKey",
+		"parentItem",
+		"annotationText",
+		"annotationComment",
+		"annotationColor",
+		"pageLabel",
+	]
+
+	let output = "";
+
+	if (annotationProperties.includes(property)){
+		output = `${item[property]}`;
+	} else {
+		output = `${item.parentItem[property]}`;
+	};
+
+	renderResults(
+		subtitleEl, 
+		output,
+		match.match, 
+		offset
+	);
 }
 
 export async function loadItems(
@@ -56,7 +82,7 @@ export async function loadItems(
 
 export async function loadAnnotations(
 	client: ZoteroClient,
-): Promise<ZoteroAnnotation[]> {
+): Promise<ZoteroItem[]> {
 
 	try {
 		const annotations = await client.getAnnotations();

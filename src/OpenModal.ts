@@ -3,19 +3,22 @@ import { App, FuzzyMatch, FuzzySuggestModal } from 'obsidian';
 import { ZoteroClient } from "./ZoteroClient";
 import { ZoteroItem } from "./ZoteroItem";
 import { loadItems, renderZoteroItem } from "./Utils"
+import { Settings } from "./Settings";
 
 const ZOTERO_BASE_URL = "zotero://select/library/items/";
 
 export class OpenModal extends FuzzySuggestModal<ZoteroItem> {
 	private client: ZoteroClient;
 	private items: ZoteroItem[] = [];
+	private settings: Settings
 
 	constructor(
 		app: App,
-		port: string,
+		settings: Settings,
 	) {
 		super(app);
-		this.client = new ZoteroClient(port);
+		this.settings = settings;
+		this.client = new ZoteroClient(this.settings.port);
 		this.setPlaceholder("Loading...");
 	}
 
@@ -29,11 +32,11 @@ export class OpenModal extends FuzzySuggestModal<ZoteroItem> {
 	}
 
 	getItemText(item: ZoteroItem): string {
-		return item.toString();
+		return `${item.title} ${item[this.settings.search]}`;
 	}
 
 	renderSuggestion(match: FuzzyMatch<ZoteroItem>, el: HTMLElement) {
-		renderZoteroItem(match, el);
+		renderZoteroItem(match, el, this.settings.search);
 	}
 
 	onChooseItem(item: ZoteroItem) {

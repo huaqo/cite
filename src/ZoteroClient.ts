@@ -1,6 +1,5 @@
 import { Notice, requestUrl } from 'obsidian';
 import { ZoteroItem } from './ZoteroItem';
-import { ZoteroAnnotation } from './ZoteroAnnotation';
 import type { ZoteroResponse } from './ZoteroResponse';
 
 export class ZoteroClient {
@@ -90,7 +89,7 @@ export class ZoteroClient {
 		return promise;
 	}
 
-	private async resolveParentItem(annotation: ZoteroAnnotation): Promise<void> {
+	private async resolveParentItem(annotation: ZoteroItem): Promise<void> {
 		if (!annotation.attachmentItemKey) return;
 
 		const attachmentOrParent = await this.getItemByKey(annotation.attachmentItemKey, "citation,bib,data");
@@ -109,7 +108,7 @@ export class ZoteroClient {
 		annotation.parentItem = ZoteroItem.fromResponse(fullParentItem);
 	}
 
-	async getAnnotations(): Promise<ZoteroAnnotation[]> {
+	async getAnnotations(): Promise<ZoteroItem[]> {
 		this.params.set("include", "data");
 		this.params.set("itemType", "annotation");
 
@@ -119,8 +118,8 @@ export class ZoteroClient {
 		this.params.delete("itemType");
 
 		const annotations = responses
-			.map(annotation => ZoteroAnnotation.fromResponse(annotation))
-			.filter(a => a.text && a.text.trim() !== "");
+			.map(annotation => ZoteroItem.fromResponse(annotation))
+			.filter(a => a.annotationText && a.annotationText.trim() !== "");
 
 		for (const annotation of annotations) {
 			try {
