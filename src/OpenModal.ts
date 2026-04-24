@@ -2,6 +2,7 @@ import { shell } from "electron";
 import { App, FuzzyMatch, FuzzySuggestModal } from 'obsidian';
 import { ZoteroClient } from "./ZoteroClient";
 import { ZoteroItem } from "./ZoteroItem";
+import { loadItems, renderZoteroItem } from "./Utils"
 
 const ZOTERO_BASE_URL = "zotero://select/library/items/";
 

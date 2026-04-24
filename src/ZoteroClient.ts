@@ -9,6 +9,7 @@ export class ZoteroClient {
 	private baseURL: string;
 	private style?: string;
 	private params: URLSearchParams;
+	private itemCache = new Map<string, Promise<ZoteroResponse>>();
 
 	constructor(port: string);
 	constructor(port: string, style: string);
@@ -58,6 +59,7 @@ export class ZoteroClient {
 	}
 
 	async getItemsTop(): Promise<ZoteroItem[]> {
+
 		if (this.style) {
 			this.params.set("style", this.style);
 		}
@@ -68,6 +70,12 @@ export class ZoteroClient {
 	}
 
 	private async getItemByKey(itemKey: string, include: string = "data"): Promise<ZoteroResponse> {
+		const cacheKey = `${itemKey}:${include}:${this.style ?? ""}`;
+
+		if (this.itemCache.has(cacheKey)) {
+			return this.itemCache.get(cacheKey)!;
+		}
+
 		const params = new URLSearchParams();
 		params.set("format", "json");
 		params.set("include", include);
@@ -77,7 +85,9 @@ export class ZoteroClient {
 		}
 
 		const url = `${this.baseURL}/items/${itemKey}?${params.toString()}`;
-		return await this.request<ZoteroResponse>(url);
+		const promise = this.request<ZoteroResponse>(url);
+		this.itemCache.set(cacheKey, promise);
+		return promise;
 	}
 
 	private async resolveParentItem(annotation: ZoteroAnnotation): Promise<void> {

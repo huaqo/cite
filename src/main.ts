@@ -11,36 +11,14 @@ export default class Cite extends Plugin {
 
 		await this.loadSettings();
 
-		this.addRibbonIcon('scroll-text', 'insert citation', (evt: MouseEvent) => {
-			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		this.addSettingTab(new SettingTab(this.app, this));
 
-			if (!view) {
-				new Notice("No active Markdown view");
-				console.log("No active Markdown view");
-				return;
-			}
-
-			const editor = view.editor;
-
-			new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "citation", (citation: string) => {
-				editor.replaceSelection(citation);
-			}).open();
-		});
-
-		this.addRibbonIcon('scroll-text', 'insert bibliography', (evt: MouseEvent) => {
-			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-			if (!view) {
-				new Notice("No active Markdown view");
-				console.log("No active Markdown view");
-				return;
-			}
-
-			const editor = view.editor;
-
-			new CiteModal(this.app, this.settings.portSetting, this.settings.linkSetting, this.settings.styleSetting, "bibliography", (citation: string) => {
-				editor.replaceSelection(citation);
-			}).open();
+		this.addCommand({
+			id: 'open-command',
+			name: 'open',
+			callback: () => {
+				new OpenModal(this.app, this.settings.portSetting).open();
+			},
 		});
 
 		this.addCommand({
@@ -66,14 +44,6 @@ export default class Cite extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'open-command',
-			name: 'open',
-			callback: () => {
-				new OpenModal(this.app, this.settings.portSetting).open();
-			},
-		});
-
-		this.addCommand({
 			id: 'annotation-command',
 			name: 'insert annotations',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
@@ -83,8 +53,6 @@ export default class Cite extends Plugin {
 				}).open();
 			}
 		});
-
-		this.addSettingTab(new SettingTab(this.app, this));
 
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
