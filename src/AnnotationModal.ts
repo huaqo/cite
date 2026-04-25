@@ -3,7 +3,7 @@ import { ZoteroClient } from "./ZoteroClient";
 import { loadAnnotations, renderZoteroAnnotation } from "./Utils"
 import { Settings } from "./Settings";
 
-const ZOTERO_BASE_URL = "zotero://select/library/items/";
+const ZOTERO_BASE_URL = "zotero://open-pdf/library/items/";
 
 export class AnnotationModal extends FuzzySuggestModal<ZoteroItem> {
 	private client: ZoteroClient;
@@ -45,7 +45,7 @@ export class AnnotationModal extends FuzzySuggestModal<ZoteroItem> {
 		let citation = item.parentItem.citation ?? "";
 
 		if (this.settings.link) {
-			citation = `[${citation}](${ZOTERO_BASE_URL}${item.parentItemKey})`;
+			citation = `[${citation}](${ZOTERO_BASE_URL}${item.attachmentItemKey}?annotation=${item.key})`;
 		}
 
 		this.onChoose(`"${item.annotationText}" ${citation}`);
